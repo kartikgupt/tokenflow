@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hardayal Sweets</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @media print {
+      body * {
+        display: none !important;
+      }
+      #printArea, #printArea * {
+        display: block !important;
+      }
+      #printArea {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 0;
+        width: 48mm;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 p-6 font-sans">
+  <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-xl p-8">
+    <h1 class="text-3xl font-bold text-center mb-6 text-gray-900">Hardayal Sweets</h1>
+    <div class="flex justify-center space-x-6 mb-6">
+      <button onclick="showSection('chat')" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-200 shadow">Chat</button>
+      <button onclick="showSection('chinese')" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-200 shadow">Chinese</button>
+    </div>
+    <div id="itemsContainer"></div>
+    <!-- Two rows of action buttons -->
+    <div class="mt-8 space-y-6">
+      <div class="flex justify-center space-x-6">
+        <button onclick="preparePrint()" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-8 py-3 rounded-lg transition duration-200 shadow">Print Token</button>
+        <button onclick="showSummary()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-3 rounded-lg transition duration-200 shadow">View Summary</button>
+      </div>
+      <div class="flex justify-center space-x-6">
+        <button onclick="printPreviousToken()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-lg transition duration-200 shadow">Print Previous Token</button>
+        <button onclick="showItemizedSummary()" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-8 py-3 rounded-lg transition duration-200 shadow">Itemized Summary</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="printArea" class="hidden bg-white p-4 text-sm">
+    <div id="tokenOutput"></div>
+  </div>
+
+  <!-- Summary Modal -->
+  <div id="summaryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Token Summary (Last 30 Days)</h2>
+        <button onclick="closeSummary()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full">✕</button>
+      </div>
+      <div id="summaryContent" class="text-gray-800"></div>
+      <div class="mt-6 text-center">
+        <button onclick="closeSummary()" class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-200 shadow">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Itemized Modal -->
+  <div id="itemizedModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-2xl font-bold text-gray-800">Itemized Summary (Last 30 Days)</h2>
+        <button onclick="closeItemizedSummary()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full">✕</button>
+      </div>
+      <div id="itemizedContent" class="text-gray-800"></div>
+    </div>
+  </div>
+
+  <script>
+    // Menu data for Chat and Chinese sections
+    const menu = {
+      chat: [
+        { name: "Aloo Tikki Single", price: 30, qty: 0 },
+        { name: "Aloo Tikki Double", price: 50, qty: 0 },
+        { name: "Golgappe Half", price: 10, qty: 0 },
+        { name: "Golgappe Full", price: 20, qty: 0 },
+        { name: "Dahi Chatni Batashe", price: 30, qty: 0 }
+      ],
+      chinese: [
+        { name: "Veg. Noodles", price: 40, qty: 0 },
+        { name: "Paneer Noodles", price: 60, qty: 0 },
+        { name: "Hakka Noodles", price: 90, qty: 0 },
+        { name: "Singapore Noodles", price: 90, qty: 0 },
+        { name: "Veg. Burger", price: 30, qty: 0 },
+        { name: "Cheese Burger", price: 50, qty: 0 },
+        { name: "Finger Chips", price: 40, qty: 0 },
+        { name: "Pav Bhaji", price: 40, qty: 0 },
+        { name: "Momos (4 pieces)", price: 40, qty: 0 },
+        { name: "Spring Roll", price: 40, qty: 0 },
+        { name: "Chilli Potato", price: 60, qty: 0 },
+        { name: "Honey Chilli Potato", price: 80, qty: 0 },
+        { name: "Veg. Manchurian Dry", price: 90, qty: 0 },
+        { name: "Veg. Manchurian Gravy", price: 90, qty: 0 },
+        { name: "Paneer Manchurian Dry", price: 120, qty: 0 },
+        { name: "Paneer Manchurian Gravy", price: 120, qty: 0 },
+        { name: "Chilli Paneer Dry", price: 100, qty: 0 },
+        { name: "Chilli Paneer Gravy", price: 100, qty: 0 },
+        { name: "Veg. Fried Rice", price: 70, qty: 0 },
+        { name: "Paneer Fried Rice", price: 70, qty: 0 },
+        { name: "Veg. Biryani", price: 50, qty: 0 }
+      ]
+    };
+
+    let currentSection = 'chat';
+    let tokenNumber = parseInt(localStorage.getItem("lastToken") || "0");
+    let lastPrintedToken = null;
+    let prevPrintedToken = null;
+
+    function showSection(section) {
+      currentSection = section;
+      renderItems();
+    }
+
+    function changeQty(index, delta) {
+      const item = menu[currentSection][index];
+      item.qty = Math.max(0, item.qty + delta);
+      renderItems();
+    }
+
+    function renderItems() {
+      const container = document.getElementById("itemsContainer");
+      container.innerHTML = "";
+      menu[currentSection].forEach((item, i) => {
+        const row = document.createElement("div");
+        row.className = "flex justify-between items-center mb-3 p-3 border rounded-lg shadow-sm bg-gray-50";
+        row.innerHTML = `
+          <span class="font-medium text-gray-800">${item.name} - ₹${item.price}</span>
+          <div class="flex items-center space-x-3">
+            <button onclick="changeQty(${i}, -1)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-full transition duration-200">-</button>
+            <span class="text-gray-800 font-semibold">${item.qty}</span>
+            <button onclick="changeQty(${i}, 1)" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-full transition duration-200">+</button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // Generate token data and deep copy selected items
+    function generateTokenData() {
+      const allItems = [...menu.chat, ...menu.chinese];
+      const selected = allItems.filter(i => i.qty > 0);
+      if (selected.length === 0) {
+        alert("No items selected.");
+        return null;
+      }
+      tokenNumber++;
+      localStorage.setItem("lastToken", tokenNumber);
+      const printedAt = new Date().toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" });
+      const copiedItems = selected.map(item => ({ name: item.name, price: item.price, qty: item.qty }));
+      const tokenData = { token: tokenNumber, items: copiedItems, printedAt: printedAt };
+
+      // Save token in localStorage under today's date
+      const today = new Date().toLocaleDateString();
+      const savedTokens = JSON.parse(localStorage.getItem(today) || "[]");
+      savedTokens.push(tokenData);
+      localStorage.setItem(today, JSON.stringify(savedTokens));
+
+      return tokenData;
+    }
+
+    // Standardized print function with a monospaced format
+    function printToken(tokenData) {
+      if (!tokenData) return;
+      let total = 0;
+      function centerText(text, width = 32) {
+        if (text.length >= width) return text.slice(0, width);
+        const padding = Math.floor((width - text.length) / 2);
+        return " ".repeat(padding) + text + " ".repeat(width - text.length - padding);
+      }
+      function formatLine(name, qty, price) {
+        const namePart = name.length > 18 ? name.slice(0, 18) : name.padEnd(18);
+        return `${namePart}${qty.toString().padStart(4)} ₹${price.toString().padStart(5)}`;
+      }
+      const now = new Date();
+      const dateTime = now.toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" });
+      let output = `
+<pre style="font-family: monospace; font-size: 12px; line-height: 1.2; width: 384px;">
+${centerText("Hardayal Sweets")}
+${centerText(tokenData.printedAt || dateTime)}
+${centerText(`Token #${tokenData.token}`)}
+${centerText("--------------------------------")}
+${"Item                Qty Price"}
+${centerText("--------------------------------")}`;
+      tokenData.items.forEach(item => {
+        const line = formatLine(item.name, item.qty, item.qty * item.price);
+        total += item.qty * item.price;
+        output += `\n${line}`;
+      });
+      output += `
+${centerText("--------------------------------")}
+<span style="font-weight:bold; font-size:16px;">${centerText(`Total: ₹${tokenData.items.reduce((sum, item) => sum + item.qty * item.price, 0)}`)}</span>
+${centerText("--------------------------------")}
+${centerText("SELF SERVICE")}
+${centerText("Thank You! Visit Again!")}
+</pre>`;
+      document.getElementById("tokenOutput").innerHTML = output;
+      document.getElementById("printArea").classList.remove("hidden");
+      document.getElementById("printArea").scrollIntoView();
+      setTimeout(() => window.print(), 500);
+    }
+
+    // Called when "Print Token" button is clicked
+    function preparePrint() {
+      const tokenData = generateTokenData();
+      if (!tokenData) return;
+      if (!lastPrintedToken) {
+        lastPrintedToken = tokenData;
+        prevPrintedToken = tokenData;
+      } else {
+        prevPrintedToken = lastPrintedToken;
+        lastPrintedToken = tokenData;
+      }
+      printToken(tokenData);
+      // Reset quantities for all items
+      Object.values(menu).forEach(section => section.forEach(item => item.qty = 0));
+      renderItems();
+    }
+
+    // Called when "Print Previous Token" is clicked
+    function printPreviousToken() {
+      if (!prevPrintedToken) {
+        alert("No previous token available.");
+        return;
+      }
+      printToken(prevPrintedToken);
+    }
+
+    // Modal functions for summary and itemized details
+    const tokenMap = {};
+    function reprintTokenById(btn) {
+      const tokenId = btn.getAttribute("data-token-id");
+      const tokenData = tokenMap[tokenId];
+      if (!tokenData) return alert("Token data not found");
+      printToken(tokenData);
+    }
+
+    function showSummary() {
+      const summaryContent = document.getElementById("summaryContent");
+      summaryContent.innerHTML = "";
+      const allKeys = Object.keys(localStorage).filter(k => /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(k));
+      const sortedKeys = allKeys.sort((a, b) => new Date(b) - new Date(a));
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 30);
+      sortedKeys.forEach(key => {
+        const date = new Date(key);
+        if (date < cutoffDate) {
+          localStorage.removeItem(key);
+          return;
+        }
+        const tokens = JSON.parse(localStorage.getItem(key));
+        if (!tokens || !tokens.length) return;
+        let daySummary = `<div class="mb-4 border-b pb-2">
+          <h3 class="font-semibold text-lg text-gray-800 mb-2">${key} — ${tokens.length} Token(s)</h3>`;
+        tokens.forEach(token => {
+          let total = 0;
+          let items = token.items.map(i => {
+            total += i.price * i.qty;
+            return `<li class="ml-4 text-gray-800">${i.name} x ${i.qty} = ₹${i.price * i.qty}</li>`;
+          }).join("");
+          const tokenId = `${key}_#${token.token}`;
+          tokenMap[tokenId] = token;
+          daySummary += `
+            <div class="mb-2 p-3 rounded-lg bg-gray-50 shadow-sm">
+              <div class="flex justify-between items-center">
+                <span class="font-semibold text-gray-800">Token #${token.token}</span>
+                <button onclick="reprintTokenById(this)" data-token-id="${tokenId}" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-2 py-1 rounded transition duration-200">Reprint</button>
+              </div>
+              <ul>${items}</ul>
+              <div class="mt-1 font-medium text-gray-800">Total: ₹${total}</div>
+            </div>`;
+        });
+        daySummary += "</div>";
+        summaryContent.innerHTML += daySummary;
+      });
+      document.getElementById("summaryModal").classList.remove("hidden");
+    }
+
+    function closeSummary() {
+      document.getElementById("summaryModal").classList.add("hidden");
+    }
+
+    function showItemizedSummary() {
+      const content = document.getElementById("itemizedContent");
+      content.innerHTML = "";
+      const allKeys = Object.keys(localStorage).filter(k => /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(k));
+      const sortedKeys = allKeys.sort((a, b) => new Date(b) - new Date(a));
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - 30);
+      sortedKeys.forEach(key => {
+        const date = new Date(key);
+        if (date < cutoffDate) return;
+        const tokens = JSON.parse(localStorage.getItem(key));
+        if (!tokens) return;
+        const itemMap = {};
+        tokens.forEach(token => {
+          token.items.forEach(item => {
+            if (!itemMap[item.name]) itemMap[item.name] = 0;
+            itemMap[item.name] += item.qty;
+          });
+        });
+        const rows = Object.entries(itemMap).map(([name, qty]) =>
+          `<li class="ml-4 text-gray-800">${name} — <strong>${qty}</strong></li>`
+        ).join("");
+        content.innerHTML += `
+          <div class="mb-4 border-b pb-2">
+            <h3 class="font-semibold text-lg text-gray-800 mb-2">${key}</h3>
+            <ul>${rows}</ul>
+          </div>`;
+      });
+      document.getElementById("itemizedModal").classList.remove("hidden");
+    }
+
+    function closeItemizedSummary() {
+      document.getElementById("itemizedModal").classList.add("hidden");
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showSection('chat');
+    });
+  </script>
+</body>
+</html>
