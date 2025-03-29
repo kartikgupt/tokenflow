@@ -84,3 +84,7 @@ Use the provided buttons to print tokens, view summaries, and access itemized re
 
 Conclusion
 TokenFlow is a testament to my ability to deliver innovative, AI-enhanced solutions that combine technical prowess with strong product management and UI/UX design skills. It not only addresses the operational needs of Hardayal Sweets but also serves as an example of how AI can be integrated into end-to-end web development.
+![Screenshot 2025-03-30 004638](https://github.com/user-attachments/assets/ff3a8371-0a4e-4d12-8772-4f03514d0ab9)
+![Screenshot 2025-03-30 004710](https://github.com/user-attachments/assets/0e87ef76-0a5b-4229-92ec-dea29a3cc370)
+![Screenshot 2025-03-30 004737](https://github.com/user-attachments/assets/099eb148-1dbd-4e1d-963d-2efc1a2f5a19)
+
